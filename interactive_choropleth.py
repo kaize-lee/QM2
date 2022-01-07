@@ -18,20 +18,21 @@ import geopandas as gp
 from google.colab import drive
 drive.mount('/content/drive')
 
-m_crime = fm.Map(location=[51.5074, 0], zoom_start=9.5,tiles=None)
-fm.TileLayer('CartoDB positron',name="Light Map",control=False).add_to(m_crime)
-m_crime
-
+#dataset with shapefile data for each borough
 data_path = "./drive/MyDrive/QM2_Choropleth/LondonBorough.json"
 
 boroughGeodata = gp.read_file(data_path)
 
-#removing shapefile data for City of London, as other datasets don't include it
+#removing data for City of London, as other datasets don't include it, since the City is technically not a borough
 boroughGeodataNoCity = boroughGeodata.drop(32)
 
 boroughGeodataNoCity['name'] = boroughGeodataNoCity['name'].astype('str')
 
 boroughGeodataNoCity.tail()
+
+#using folium to create the map on which we can create the choropleth
+m_crime = fm.Map(location=[51.5074, 0], zoom_start=9.5,tiles=None)
+fm.TileLayer('CartoDB positron',name="Light Map",control=False).add_to(m_crime)
 
 #violent crime dataset
 data_path = "./drive/MyDrive/QM2_Choropleth/Violent Crimes per Borough.csv"
@@ -42,7 +43,7 @@ violentcrime.head()
 geocrime = pd.merge(boroughGeodataNoCity, violentcrime, left_on='code', right_on ='GSS_CODE')
 geocrime.head()
 
-#creating the choropleth for violent crime using features from the folium library
+#creating the choropleth for violent crime using folium
 m_crime.choropleth(
     geo_data = geocrime,
     name = "choropleth",
@@ -55,9 +56,7 @@ m_crime.choropleth(
     legend_name = "Violent crimes (per 1000 people)",
     smooth_factor = 0)
 
-m_crime
-
-#creating a tooltip that shows the borough and relevant stats when you hover over it
+#now creating a tooltip that shows the borough and relevant stats when you hover over it
 style_function = lambda x: {"fillColor": "#ffffff", 
                             "color":"#000000", 
                             "fillOpacity": 0.1, 
@@ -81,7 +80,8 @@ interactive_tooltip_crime = fm.features.GeoJson(
 m_crime.add_child(interactive_tooltip_crime)
 m_crime.keep_in_front(interactive_tooltip_crime)
 fm.LayerControl().add_to(m_crime)
-m_crime
+
+#the choropleth, with interactive tooltip, has been placed onto the map
 
 #repeating the process for other factors: police strength, number of stop and searches, etc. Police strength first
 
@@ -119,7 +119,6 @@ interactive_tooltip_police_strength = fm.features.GeoJson(
 m_police.add_child(interactive_tooltip_police_strength)
 m_police.keep_in_front(interactive_tooltip_police_strength)
 fm.LayerControl().add_to(m_police)
-m_police
 
 #creating choropleth for income
 
@@ -158,7 +157,6 @@ interactive_tooltip_income = fm.features.GeoJson(
 m_income.add_child(interactive_tooltip_income)
 m_income.keep_in_front(interactive_tooltip_income)
 fm.LayerControl().add_to(m_income)
-m_income
 
 #creating choropleth for nightlife
 
@@ -198,7 +196,6 @@ interactive_tooltip_nightlife = fm.features.GeoJson(
 m_nightlife.add_child(interactive_tooltip_nightlife)
 m_nightlife.keep_in_front(interactive_tooltip_nightlife)
 fm.LayerControl().add_to(m_nightlife)
-m_nightlife
 
 #creating choropleth for happiness
 
@@ -237,7 +234,6 @@ interactive_tooltip_happiness = fm.features.GeoJson(
 m_happiness.add_child(interactive_tooltip_happiness)
 m_happiness.keep_in_front(interactive_tooltip_happiness)
 fm.LayerControl().add_to(m_happiness)
-m_happiness
 
 #creating choropleth for stop and search
 
@@ -276,8 +272,8 @@ interactive_tooltip_stopandsearch = fm.features.GeoJson(
 m_stopandsearch.add_child(interactive_tooltip_stopandsearch)
 m_stopandsearch.keep_in_front(interactive_tooltip_stopandsearch)
 fm.LayerControl().add_to(m_stopandsearch)
-m_stopandsearch
 
+#saving all the choropleths as html files to place onto the website
 m_crime.save("./drive/MyDrive/QM2_Choropleth/crime_choropleth.html")
 m_stopandsearch.save("./drive/MyDrive/QM2_Choropleth/stopandsearch_choropleth.html")
 m_happiness.save("./drive/MyDrive/QM2_Choropleth/happiness_choropleth.html")
